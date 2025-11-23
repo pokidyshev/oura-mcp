@@ -3,7 +3,7 @@
 import httpx
 from typing import Optional, Any
 
-from .config import config
+from oura_mcp.config import config
 
 
 class OuraAPIError(Exception):
