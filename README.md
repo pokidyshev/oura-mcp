@@ -159,6 +159,7 @@ For production deployment to FastMCP Cloud:
    ```
 
    ⚠️ **Important Notes**:
+
    - `DEPLOYED_URL` must include the `/mcp` path (FastMCP Cloud mount point)
    - Keep `JWT_SIGNING_KEY` stable! If you change it, all user tokens become invalid.
 
