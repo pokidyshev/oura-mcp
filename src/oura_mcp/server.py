@@ -15,8 +15,8 @@ from oura_mcp.oura_provider import OuraProvider
 # These should be set in your FastMCP Cloud environment
 CLIENT_ID = os.getenv("OURA_CLIENT_ID")
 CLIENT_SECRET = os.getenv("OURA_CLIENT_SECRET")
-# The full URL where your server is deployed
-DEPLOYED_URL = os.getenv("DEPLOYED_URL", "https://oura-mcp.fastmcp.app")
+# The full URL where your server is deployed (including /mcp mount path for FastMCP Cloud)
+DEPLOYED_URL = os.getenv("DEPLOYED_URL", "https://oura-mcp.fastmcp.app/mcp")
 # JWT signing key for FastMCP's own tokens (REQUIRED for production)
 # This must be stable across deployments or all client tokens become invalid
 # Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"

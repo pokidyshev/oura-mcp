@@ -154,11 +154,13 @@ For production deployment to FastMCP Cloud:
    ```bash
    OURA_CLIENT_ID=your_client_id
    OURA_CLIENT_SECRET=your_client_secret
-   DEPLOYED_URL=https://your-app.fastmcp.app
+   DEPLOYED_URL=https://your-app.fastmcp.app/mcp
    JWT_SIGNING_KEY=<paste_generated_key_here>
    ```
 
-   ⚠️ **Important**: Keep `JWT_SIGNING_KEY` stable! If you change it, all user tokens become invalid.
+   ⚠️ **Important Notes**:
+   - `DEPLOYED_URL` must include the `/mcp` path (FastMCP Cloud mount point)
+   - Keep `JWT_SIGNING_KEY` stable! If you change it, all user tokens become invalid.
 
 4. **Deploy**: Push to connected GitHub repo or use FastMCP CLI
 

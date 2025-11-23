@@ -20,16 +20,16 @@ class OuraTokenVerifier:
         # Scopes that MCP clients can request
         # Includes standard OIDC scopes for compatibility
         self.required_scopes = [
-            "openid",       # Standard OIDC (accepted for compatibility)
-            "profile",      # Standard OIDC (maps to Oura personal)
-            "email",        # Standard OIDC & Oura scope
-            "personal",     # Oura-specific
-            "daily",        # Oura-specific
-            "heartrate",    # Oura-specific
-            "workout",      # Oura-specific
-            "session",      # Oura-specific
-            "tag",          # Oura-specific
-            "spo2Daily",    # Oura-specific
+            "openid",  # Standard OIDC (accepted for compatibility)
+            "profile",  # Standard OIDC (maps to Oura personal)
+            "email",  # Standard OIDC & Oura scope
+            "personal",  # Oura-specific
+            "daily",  # Oura-specific
+            "heartrate",  # Oura-specific
+            "workout",  # Oura-specific
+            "session",  # Oura-specific
+            "tag",  # Oura-specific
+            "spo2Daily",  # Oura-specific
         ]
 
     def verify_token(self, token: str) -> Optional[AccessToken]:
@@ -119,7 +119,7 @@ class OuraProvider(OAuthProxy):
             upstream_client_secret=client_secret,
             base_url=base_url,
             token_verifier=token_verifier,
-            redirect_path="/mcp/auth/callback",
+            redirect_path="/auth/callback",  # Path relative to base_url (which includes /mcp)
             # Oura scopes to request from Oura
             extra_authorize_params={
                 "scope": "email personal daily heartrate workout session tag spo2Daily"
