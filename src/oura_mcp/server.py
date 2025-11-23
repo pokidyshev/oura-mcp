@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastmcp import FastMCP
+from key_value.aio.stores.disk import DiskStore
 
 from oura_mcp.config import config
 from oura_mcp.oura_client import OuraClient, OuraAPIError
@@ -32,11 +33,15 @@ if CLIENT_ID and CLIENT_SECRET:
             'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
         )
 
+    # Use filesystem storage for client registrations (persists across deployments)
+    client_storage = DiskStore(directory=".oauth_clients")
+
     auth = OuraProvider(
         client_id=CLIENT_ID,
         client_secret=CLIENT_SECRET,
         base_url=DEPLOYED_URL,
         jwt_signing_key=JWT_SIGNING_KEY,
+        client_storage=client_storage,
     )
 
 # Initialize FastMCP server with OAuth (if configured) or without auth (for local PAT usage)
