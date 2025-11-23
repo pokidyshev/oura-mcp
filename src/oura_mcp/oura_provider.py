@@ -105,21 +105,23 @@ class OuraProvider(OAuthProxy):
         Args:
             client_id: Your Oura OAuth application client ID
             client_secret: Your Oura OAuth application client secret
-            base_url: Your FastMCP server's public URL including mount path (e.g., https://your-app.fastmcp.app/mcp)
+            base_url: Your FastMCP server's public URL (e.g., https://your-app.fastmcp.app - /mcp will be added automatically)
             **kwargs: Additional arguments passed to OAuthProxy
         """
         # Create Oura-specific token verifier
         token_verifier = OuraTokenVerifier()
 
         # Initialize OAuthProxy with Oura endpoints
+        # Note: For FastMCP Cloud deployments, base_url should NOT include /mcp
+        # The redirect_path should include /mcp for the public callback URL
         super().__init__(
             upstream_authorization_endpoint="https://cloud.ouraring.com/oauth/authorize",
             upstream_token_endpoint="https://api.ouraring.com/oauth/token",
             upstream_client_id=client_id,
             upstream_client_secret=client_secret,
-            base_url=base_url,
+            base_url=base_url.rstrip('/mcp') if base_url.endswith('/mcp') else base_url,  # Strip /mcp if present
             token_verifier=token_verifier,
-            redirect_path="/auth/callback",  # Callback path appended to base_url
+            redirect_path="/mcp/auth/callback",  # Full public callback path
             # Oura scopes to request from Oura
             extra_authorize_params={
                 "scope": "email personal daily heartrate workout session tag spo2Daily"
