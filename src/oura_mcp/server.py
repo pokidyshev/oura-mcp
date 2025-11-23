@@ -17,33 +17,18 @@ CLIENT_ID = os.getenv("OURA_CLIENT_ID")
 CLIENT_SECRET = os.getenv("OURA_CLIENT_SECRET")
 # The full URL where your server is deployed
 DEPLOYED_URL = os.getenv("DEPLOYED_URL", "https://oura-mcp.fastmcp.app")
-# JWT signing key for FastMCP tokens (optional, for enhanced security)
-JWT_SIGNING_KEY = os.getenv("JWT_SIGNING_KEY")
 
 # Configure Oura OAuth Provider (only if credentials are provided)
 # OuraProvider extends OAuthProxy with Oura-specific token validation
 auth = None
 if CLIENT_ID and CLIENT_SECRET:
-    auth_kwargs = {
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "base_url": DEPLOYED_URL,
-    }
-    
-    # Add JWT signing key if provided (optional, for enhanced security)
-    if JWT_SIGNING_KEY:
-        auth_kwargs["jwt_signing_key"] = JWT_SIGNING_KEY
-    
-    auth = OuraProvider(**auth_kwargs)
+    auth = OuraProvider(
+        client_id=CLIENT_ID, client_secret=CLIENT_SECRET, base_url=DEPLOYED_URL
+    )
 
 # Initialize FastMCP server with OAuth (if configured) or without auth (for local PAT usage)
-mcp = FastMCP(
-    "Oura Ring Health Data Server",
-    auth=auth,
-    # FastMCP Cloud requires listening on 0.0.0.0
-    host="0.0.0.0",
-    port=8080,
-)
+# FastMCP Cloud requires listening on 0.0.0.0
+mcp = FastMCP("Oura Ring Health Data Server", auth=auth, host="0.0.0.0", port=8080)
 
 
 def get_oura_client() -> OuraClient:

@@ -169,10 +169,6 @@ For production deployment to FastMCP Cloud:
 - **Date Formats**: Supports natural language ("today", "yesterday", "last week") and YYYY-MM-DD
 - **Security**: All API calls use HTTPS. Tokens stored in environment variables only.
 
-## Security Note (OAuth2 Deployment)
-
-The OAuth2 implementation uses `OuraProvider`, a custom provider that extends FastMCP's `OAuthProxy` with Oura-specific token validation. Token verification is performed by making API calls to Oura's endpoints, similar to how GitHub's provider works. This ensures that only valid Oura tokens are accepted, providing production-ready security for your deployment.
-
 ## License
 
 MIT License - see LICENSE file
