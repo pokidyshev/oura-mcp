@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastmcp import FastMCP
-from key_value.aio.stores.disk import DiskStore
+from key_value.aio.stores.memory import MemoryStore
 
 from oura_mcp.config import config
 from oura_mcp.oura_client import OuraClient, OuraAPIError
@@ -33,8 +33,9 @@ if CLIENT_ID and CLIENT_SECRET:
             'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
         )
 
-    # Use filesystem storage for client registrations (persists across deployments)
-    client_storage = DiskStore(directory=".oauth_clients")
+    # Use in-memory storage for client registrations
+    # Note: Clients will need to re-register on deployment, but this happens automatically
+    client_storage = MemoryStore()
 
     auth = OuraProvider(
         client_id=CLIENT_ID,
