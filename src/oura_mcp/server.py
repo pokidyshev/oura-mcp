@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastmcp import FastMCP
-from key_value.aio.stores.memory import MemoryStore
 
 from oura_mcp.config import config
 from oura_mcp.oura_client import OuraClient, OuraAPIError
@@ -33,16 +32,14 @@ if CLIENT_ID and CLIENT_SECRET:
             'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
         )
 
-    # Use in-memory storage for client registrations
-    # Note: Clients will need to re-register on deployment, but this happens automatically
-    client_storage = MemoryStore()
-
+    # Note: FastMCP Cloud is serverless, so client registrations use in-memory storage (default)
+    # Clients automatically re-register after deployment - transparent to users
+    # For production with persistence, use Redis: client_storage=RedisStore(...)
     auth = OuraProvider(
         client_id=CLIENT_ID,
         client_secret=CLIENT_SECRET,
         base_url=DEPLOYED_URL,
         jwt_signing_key=JWT_SIGNING_KEY,
-        client_storage=client_storage,
     )
 
 # Initialize FastMCP server with OAuth (if configured) or without auth (for local PAT usage)
