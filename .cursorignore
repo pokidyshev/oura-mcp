@@ -1,0 +1,122 @@
+# ==============================================================================
+# Cursor Ignore Configuration for Oura MCP Server
+# ==============================================================================
+# Files and directories listed here are excluded from:
+# - Codebase indexing
+# - AI features (Tab, Agent, Inline Edit)
+# - @ symbol references
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Sensitive Files - Security
+# ------------------------------------------------------------------------------
+# Oura API tokens and credentials
+.env
+.env.local
+.env.*.local
+.oura_tokens.json
+
+# API keys and secrets
+**/credentials.json
+**/secrets.json
+**/*.key
+**/*.pem
+**/id_rsa
+
+# ------------------------------------------------------------------------------
+# Python Build Artifacts
+# ------------------------------------------------------------------------------
+# Compiled Python files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# ------------------------------------------------------------------------------
+# Virtual Environments
+# ------------------------------------------------------------------------------
+.venv/
+venv/
+ENV/
+env/
+.Python
+
+# ------------------------------------------------------------------------------
+# Testing & Coverage
+# ------------------------------------------------------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+pytest_debug.log
+
+# ------------------------------------------------------------------------------
+# IDE & Editor Files
+# ------------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ------------------------------------------------------------------------------
+# Dependency Lock Files (large and auto-generated)
+# ------------------------------------------------------------------------------
+uv.lock
+poetry.lock
+Pipfile.lock
+
+# ------------------------------------------------------------------------------
+# Documentation (optional - comment out if you want these indexed)
+# ------------------------------------------------------------------------------
+# Uncomment to exclude documentation from indexing:
+# *.md
+# docs/
+
+# ------------------------------------------------------------------------------
+# Git
+# ------------------------------------------------------------------------------
+.git/
+.gitignore
+
+# ------------------------------------------------------------------------------
+# Logs
+# ------------------------------------------------------------------------------
+*.log
+logs/
+
+# ==============================================================================
+# Keep These Accessible (Examples - already accessible by default)
+# ==============================================================================
+# !README.md
+# !QUICKSTART.md
+# !.env.example
+# !pyproject.toml
+# !src/**/*.py
+
