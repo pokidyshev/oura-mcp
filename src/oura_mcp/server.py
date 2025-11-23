@@ -43,8 +43,7 @@ if CLIENT_ID and CLIENT_SECRET:
     )
 
 # Initialize FastMCP server with OAuth (if configured) or without auth (for local PAT usage)
-# FastMCP Cloud requires listening on 0.0.0.0
-mcp = FastMCP("Oura Ring Health Data Server", auth=auth, host="0.0.0.0", port=8080)
+mcp = FastMCP("Oura Ring Health Data Server", auth=auth)
 
 
 def get_oura_client() -> OuraClient:
@@ -643,7 +642,8 @@ def main():
         print("✅ Using Personal Access Token")
 
     # Run the server
-    mcp.run()
+    # FastMCP Cloud requires listening on 0.0.0.0:8080
+    mcp.run(host="0.0.0.0", port=8080)
 
 
 if __name__ == "__main__":
