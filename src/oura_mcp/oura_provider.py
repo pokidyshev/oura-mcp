@@ -28,7 +28,7 @@ class OuraTokenVerifier:
             "spo2Daily",
         ]
 
-    async def verify_token(self, token: str) -> Optional[AccessToken]:
+    def verify_token(self, token: str) -> Optional[AccessToken]:
         """
         Verify an Oura access token by calling Oura's API.
 
@@ -38,10 +38,10 @@ class OuraTokenVerifier:
         Returns:
             AccessToken if valid, None otherwise
         """
-        async with httpx.AsyncClient() as client:
-            try:
-                # Call Oura's personal_info endpoint to validate token
-                response = await client.get(
+        try:
+            # Call Oura's personal_info endpoint to validate token
+            with httpx.Client() as client:
+                response = client.get(
                     "https://api.ouraring.com/v2/usercollection/personal_info",
                     headers={"Authorization": f"Bearer {token}"},
                     timeout=10.0,
@@ -66,9 +66,9 @@ class OuraTokenVerifier:
                 # Invalid token
                 return None
 
-            except Exception:
-                # Network error or invalid response
-                return None
+        except Exception:
+            # Network error or invalid response
+            return None
 
 
 class OuraProvider(OAuthProxy):
