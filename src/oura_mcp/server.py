@@ -31,7 +31,7 @@ if CLIENT_ID and CLIENT_SECRET:
             "JWT_SIGNING_KEY environment variable is required for OAuth2 deployment. "
             'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
         )
-    
+
     auth = OuraProvider(
         client_id=CLIENT_ID,
         client_secret=CLIENT_SECRET,
