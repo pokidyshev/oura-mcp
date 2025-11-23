@@ -93,17 +93,9 @@ poetry.lock
 Pipfile.lock
 
 # ------------------------------------------------------------------------------
-# Documentation (optional - comment out if you want these indexed)
-# ------------------------------------------------------------------------------
-# Uncomment to exclude documentation from indexing:
-# *.md
-# docs/
-
-# ------------------------------------------------------------------------------
 # Git
 # ------------------------------------------------------------------------------
 .git/
-.gitignore
 
 # ------------------------------------------------------------------------------
 # Logs
@@ -112,11 +104,6 @@ Pipfile.lock
 logs/
 
 # ==============================================================================
-# Keep These Accessible (Examples - already accessible by default)
+# Keep These Accessible (overrides globalignore)
 # ==============================================================================
-# !README.md
-# !QUICKSTART.md
-# !.env.example
-# !pyproject.toml
-# !src/**/*.py
-
+!.env.example

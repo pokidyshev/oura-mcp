@@ -12,12 +12,14 @@ load_dotenv()
 
 class OuraConfig:
     """Configuration for Oura API authentication and token management.
-    
+
     Supports two authentication methods:
     1. Personal Access Token (PAT) - Simple, recommended for personal use
        - Only requires OURA_ACCESS_TOKEN
+       - ✅ TESTED
     2. OAuth2 with refresh tokens - Advanced, for production applications
        - Requires OURA_ACCESS_TOKEN, OURA_REFRESH_TOKEN, OURA_CLIENT_ID, OURA_CLIENT_SECRET
+       - ⚠️  WARNING: NOT TESTED YET!
     """
 
     def __init__(self):
@@ -26,7 +28,7 @@ class OuraConfig:
         self.client_id = os.getenv("OURA_CLIENT_ID")
         self.client_secret = os.getenv("OURA_CLIENT_SECRET")
 
-        # Token file for persistence (only used with OAuth2 refresh)
+        # Token file for persistence (LOCAL/DEV/TESTING ONLY - not for production)
         self.token_file = Path(os.getenv("OURA_TOKEN_FILE", ".oura_tokens.json"))
 
         # Load tokens from file if it exists, otherwise from environment
@@ -54,7 +56,7 @@ class OuraConfig:
 
     def save_tokens(self, access_token: str, refresh_token: str) -> None:
         """
-        Save tokens to file for persistence.
+        Save tokens to file for persistence (LOCAL/DEV/TESTING ONLY).
 
         Args:
             access_token: New access token
@@ -98,12 +100,10 @@ class OuraConfig:
             )
 
         return True, ""
-    
+
     def is_using_oauth2(self) -> bool:
         """Check if OAuth2 with refresh tokens is configured."""
-        return bool(
-            self.refresh_token and self.client_id and self.client_secret
-        )
+        return bool(self.refresh_token and self.client_id and self.client_secret)
 
 
 # Global configuration instance

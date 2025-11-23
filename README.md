@@ -1,435 +1,154 @@
-# Oura MCP
+# Oura MCP Server
 
-A comprehensive Model Context Protocol (MCP) server for the Oura Ring API v2, providing LLMs like Claude with seamless access to sleep, activity, readiness, heart rate, and other health metrics from your Oura Ring.
+Connect your Oura Ring to Claude, Cursor, or any MCP-compatible app! Ask questions about your sleep, activity, readiness, heart rate, and other health metrics using natural language.
 
-## Features
+## What Can You Do?
 
-- **🔧 15+ MCP Tools**: Interactive data fetching with flexible date ranges
-- **📊 5 MCP Resources**: Quick access to recent summaries without parameters
-- **🔄 OAuth2 Token Management**: Automatic token refresh with persistent storage
-- **📅 Natural Language Dates**: Support for "today", "yesterday", "last week"
-- **🛡️ Comprehensive Error Handling**: Graceful handling of API errors with detailed messages
-- **📖 Complete API Coverage**: All major Oura API v2 endpoints
-
-## Available Tools
-
-### Core Daily Summaries
-
-- `get_daily_sleep` - Sleep scores and contributors (deep sleep, REM, efficiency, etc.)
-- `get_daily_activity` - Activity scores, steps, calories, and MET minutes
-- `get_daily_readiness` - Readiness scores with HRV, temperature, and recovery metrics
-- `get_daily_stress` - Stress and recovery time in seconds
-
-### Detailed Sleep Data
-
-- `get_sleep_periods` - Detailed sleep sessions with phases, heart rate, HRV, breathing
-- `get_sleep_time` - Optimal bedtime recommendations
-
-### Activity & Workouts
-
-- `get_workouts` - Workout summaries with type, intensity, calories, distance
-- `get_sessions` - Meditation, breathing exercises, and nap sessions
-
-### Time-Series Data
-
-- `get_heartrate` - 5-minute interval heart rate measurements
-
-### Advanced Metrics
-
-- `get_daily_spo2` - Blood oxygen levels during sleep (Gen 3 ring)
-- `get_vo2_max` - VO2 max cardiorespiratory fitness estimates
-- `get_daily_resilience` - Resilience scores and levels
-- `get_cardiovascular_age` - Predicted vascular age [18-100]
-
-### User Data
-
-- `get_personal_info` - Age, weight, height, biological sex, email
-- `get_ring_configuration` - Ring model, color, size, firmware version
-- `get_enhanced_tags` - User-entered tags and annotations
-- `get_rest_mode_periods` - Rest mode periods
-
-## Available Resources
-
-Quick access to recent data without parameters:
-
-- `oura://summary/today` - Today's readiness, sleep, and activity scores
-- `oura://summary/yesterday` - Yesterday's complete summary
-- `oura://personal/info` - Personal information and ring configuration
-- `oura://recent/sleep` - Last 7 days of sleep scores
-- `oura://recent/activity` - Last 7 days of activity scores
-
-## Prerequisites
-
-1. **Oura Ring Account**: Active Oura Ring with synced data
-2. **Personal Access Token**: Get it from [Oura Cloud](https://cloud.ouraring.com/personal-access-tokens)
-
-That's it! For personal use, a Personal Access Token is all you need.
-
-### Getting Your Personal Access Token (Recommended - 2 minutes)
-
-1. Go to https://cloud.ouraring.com/personal-access-tokens
-2. Log in with your Oura account
-3. Click "Create A New Personal Access Token"
-4. Give it a name (e.g., "MCP Server")
-5. Copy the token (you won't see it again!)
-
-**Note**: Personal Access Tokens don't expire but can be revoked. Perfect for personal use!
-
-### OAuth2 Setup (Advanced - For Production Apps)
-
-Only needed if you're building a production application that requires automatic token refresh.
-
-1. Go to https://cloud.ouraring.com/oauth/applications
-2. Create a new application
-3. Note your `Client ID` and `Client Secret`
-4. Complete the OAuth2 flow to get access and refresh tokens
-
-For detailed OAuth2 flow, see [Oura API Documentation](https://cloud.ouraring.com/docs/authentication).
-
-## Installation & Setup
-
-### For Claude Desktop
-
-1. **Get your Oura Personal Access Token**:
-
-   - Go to https://cloud.ouraring.com/personal-access-tokens
-   - Create a new token
-   - Copy it immediately (you won't see it again!)
-
-2. **Configure Claude Desktop**:
-
-   Edit your Claude Desktop config file:
-
-   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-   - Linux: `~/.config/Claude/claude_desktop_config.json`
-
-   Add the server configuration:
-
-   ```json
-   {
-     "mcpServers": {
-       "oura": {
-         "command": "uvx",
-         "args": ["oura-mcp"],
-         "env": {
-           "OURA_ACCESS_TOKEN": "YOUR_PERSONAL_ACCESS_TOKEN_HERE"
-         }
-       }
-     }
-   }
-   ```
-
-   **For OAuth2 with auto-refresh** (advanced), include all four variables:
-
-   ```json
-   {
-     "mcpServers": {
-       "oura": {
-         "command": "uvx",
-         "args": ["oura-mcp"],
-         "env": {
-           "OURA_ACCESS_TOKEN": "YOUR_ACCESS_TOKEN_HERE",
-           "OURA_REFRESH_TOKEN": "YOUR_REFRESH_TOKEN_HERE",
-           "OURA_CLIENT_ID": "YOUR_CLIENT_ID_HERE",
-           "OURA_CLIENT_SECRET": "YOUR_CLIENT_SECRET_HERE"
-         }
-       }
-     }
-   }
-   ```
-
-3. **Restart Claude Desktop**
-
-4. **Verify**: Look for the 🔌 icon in Claude - you should see the Oura server connected
-
-### For Development
-
-1. **Clone or create the project**:
-
-   ```bash
-   git clone <repository-url>
-   cd oura-mcp
-   ```
-
-2. **Create `.env` file**:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Edit `.env` and add your Personal Access Token:
-
-   ```
-   OURA_ACCESS_TOKEN=your_personal_access_token_here
-   ```
-
-   (For OAuth2 setup, see the comments in `.env.example`)
-
-3. **Install dependencies**:
-
-   ```bash
-   uv sync
-   ```
-
-4. **Test with MCP Inspector**:
-
-   ```bash
-   uv run mcp dev src/oura_mcp/server.py
-   ```
-
-   Open the provided URL (usually http://localhost:5173) to interact with the server.
-
-## Configuration
-
-### Environment Variables
-
-| Variable             | Required | Description                                                     |
-| -------------------- | -------- | --------------------------------------------------------------- |
-| `OURA_ACCESS_TOKEN`  | **Yes**  | Personal Access Token or OAuth2 access token                    |
-| `OURA_REFRESH_TOKEN` | No       | OAuth2 refresh token (for automatic token renewal)              |
-| `OURA_CLIENT_ID`     | No\*     | OAuth2 client ID (\*required if using `OURA_REFRESH_TOKEN`)     |
-| `OURA_CLIENT_SECRET` | No\*     | OAuth2 client secret (\*required if using `OURA_REFRESH_TOKEN`) |
-| `OURA_TOKEN_FILE`    | No       | Path to token storage file (default: `.oura_tokens.json`)       |
-
-### Authentication Methods
-
-**Method 1: Personal Access Token (Recommended)**
-
-- ✅ Simple setup - just one token
-- ✅ No expiration (unless you revoke it)
-- ✅ Perfect for personal use
-- ❌ Must manually revoke/recreate if compromised
-
-```bash
-OURA_ACCESS_TOKEN=your_personal_access_token
-```
-
-**Method 2: OAuth2 with Refresh Tokens (Advanced)**
-
-- ✅ Automatic token refresh
-- ✅ Tokens expire regularly (more secure)
-- ✅ Better for production applications
-- ❌ More complex setup (4 variables)
-
-```bash
-OURA_ACCESS_TOKEN=your_oauth2_access_token
-OURA_REFRESH_TOKEN=your_refresh_token
-OURA_CLIENT_ID=your_client_id
-OURA_CLIENT_SECRET=your_client_secret
-```
-
-### Token Management
-
-**Personal Access Token:**
-
-- Does not expire automatically
-- Can be revoked at https://cloud.ouraring.com/personal-access-tokens
-- No automatic refresh needed
-
-**OAuth2 Tokens:**
-
-- **Automatic Refresh**: If you provide all OAuth2 credentials, the server will automatically refresh your access token when it expires (typically after 24 hours)
-- **Token Persistence**: Updated tokens are automatically saved to `.oura_tokens.json` for persistence across restarts
-- **Manual Refresh**: If only access token is provided, you'll need to manually update it when it expires
-
-## Usage Examples
-
-### Using with Claude
-
-Once configured, you can ask Claude natural questions like:
+Once installed, you can ask your AI assistant:
 
 - "What was my sleep score last night?"
 - "Show me my activity data for the past week"
-- "How is my readiness trending over the last month?"
-- "What was my heart rate during my workout yesterday?"
+- "How is my readiness trending this month?"
+- "What was my heart rate during yesterday's workout?"
 - "Show me my VO2 max progression"
 
-### Tool Parameters
+Your AI assistant will have access to all your Oura Ring data and can analyze trends, compare periods, and give you insights.
 
-Most tools accept flexible date parameters:
+## Quick Setup
 
-```python
-# Natural language
-get_daily_sleep(start_date="today")
-get_daily_sleep(start_date="yesterday")
-get_daily_sleep(start_date="last week")
+### Step 1: Get Your Oura Token
 
-# Specific dates
-get_daily_sleep(start_date="2024-01-01", end_date="2024-01-31")
+1. Go to https://cloud.ouraring.com/personal-access-tokens
+2. Log in with your Oura account
+3. Click **"Create A New Personal Access Token"**
+4. Give it a name (like "Claude")
+5. **Copy the token** - you won't see it again!
 
-# Default (last week if not specified)
-get_daily_sleep()
+### Step 2: Configure Your MCP Client
+
+**For Claude Desktop:**
+
+Find your Claude Desktop config file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+Open it in a text editor and add this (replace `YOUR_TOKEN_HERE` with your token from Step 1):
+
+```json
+{
+  "mcpServers": {
+    "oura": {
+      "command": "uvx",
+      "args": ["oura-mcp"],
+      "env": {
+        "OURA_ACCESS_TOKEN": "YOUR_TOKEN_HERE"
+      }
+    }
+  }
+}
 ```
 
-### Resource Access
+**If you already have other MCP servers**, just add the `"oura"` section inside `"mcpServers"`.
 
-Resources provide instant access without parameters:
+**For other MCP clients** (Cursor, etc.): Refer to your client's documentation for MCP server configuration. Use the same `uvx oura-mcp` command with the `OURA_ACCESS_TOKEN` environment variable.
 
-- Simply reference `oura://summary/today` to get today's summary
-- Use `oura://recent/sleep` for the last week of sleep data
+### Step 3: Restart Your MCP Client
 
-## API Rate Limits
+Close and reopen your application (Claude Desktop, Cursor, etc.). Look for the MCP servers/tools indicator - you should see "oura" listed as connected.
 
-The Oura API has a rate limit of **5,000 requests per 5-minute rolling window**. This server handles:
+### Step 4: Start Using It!
 
-- Automatic pagination for large datasets
-- Error messages when rate limits are exceeded
-- Efficient resource caching where appropriate
+Try asking: "Show me my sleep data from last week"
 
-**Best Practice**: Use webhooks (not included in this server) for real-time updates instead of frequent polling.
+## Available Data
+
+The server provides access to:
+
+**Daily Summaries**
+
+- Sleep scores and analysis (deep sleep, REM, efficiency, etc.)
+- Activity scores, steps, calories, and active time
+- Readiness scores with HRV, temperature, and recovery metrics
+- Stress and recovery data
+
+**Detailed Metrics**
+
+- Sleep sessions with heart rate, HRV, and breathing patterns
+- Workouts with intensity, calories, and distance
+- Heart rate data in 5-minute intervals
+- VO2 max estimates
+- Blood oxygen levels (Gen 3 ring)
+- Resilience and cardiovascular age
+
+**Personal Data**
+
+- Ring information and settings
+- Personal profile data
+- Tags and annotations
 
 ## Troubleshooting
 
-### "No access token available" error
+### "No access token available" or connection error
 
-**Solution**: Ensure `OURA_ACCESS_TOKEN` is set in your environment or `.env` file.
+1. Double-check your token is correct in the config file
+2. Make sure there are no extra spaces or quotes
+3. Restart your application after making changes
+4. Create a new token if needed: https://cloud.ouraring.com/personal-access-tokens
 
-Get a Personal Access Token from: https://cloud.ouraring.com/personal-access-tokens
+### No data showing up
 
-### Token expired (401 error)
+- Make sure your Oura Ring has synced recently (open the Oura mobile app)
+- Sleep data requires manual sync via the app
+- You can only access dates when you were wearing the ring
 
-**For Personal Access Token users:**
+### MCP client doesn't see the Oura server
 
-- Personal Access Tokens don't expire unless revoked
-- If you get this error, your token may have been revoked
-- Create a new token at https://cloud.ouraring.com/personal-access-tokens
+1. Check your client's MCP servers/tools list - is "oura" listed?
+2. Verify your config file has valid JSON (use a JSON validator online)
+3. Make sure you restarted your application after editing the config
 
-**For OAuth2 users:**
+### Still having issues?
 
-1. If you have all OAuth2 credentials configured, the server will automatically refresh it
-2. If not, manually obtain a new access token and update your configuration
+Check the Oura API status: https://api.ouraring.com
 
-### "Missing scopes" error (403)
+## For Developers
 
-**Solution**: Re-authorize your application with the required scopes. The error message will indicate which scopes are needed.
-
-### Rate limit exceeded (429 error)
-
-**Solution**: Wait for the rate limit window to reset (5 minutes). Consider:
-
-- Reducing query frequency
-- Using date ranges instead of multiple single-day queries
-- Implementing webhooks for real-time data (not included in this server)
-
-### Connection issues
-
-**Solutions**:
-
-1. Check your internet connection
-2. Verify Oura API is accessible: https://api.ouraring.com
-3. Ensure your access token is valid
-
-### Data not available (404)
-
-**Cause**: The requested data doesn't exist for the specified date range.
-
-**Solutions**:
-
-- Ensure your Oura Ring has synced recently (requires opening the mobile app)
-- Check that you're querying dates when you were wearing the ring
-- Some metrics require Gen 3 ring (e.g., SpO2)
-
-## Data Availability Notes
-
-- **Sleep data**: Requires manual sync via mobile app
-- **Activity data**: Syncs automatically in background
-- **Real-time data**: Not available; data appears after sync
-- **Historical data**: Available for several months to years depending on metric
-
-## Security
-
-- **Token Storage**:
-  - Personal Access Tokens are stored in environment variables only
-  - OAuth2 tokens are stored locally in `.oura_tokens.json` (add to `.gitignore`)
-- **Secure Transport**: All API calls use HTTPS
-- **No Data Collection**: This server only communicates with Oura's API
-- **Token Permissions**: Personal Access Tokens have full account access; OAuth2 tokens can be scoped
-
-## Required API Scopes
-
-This server requires the following Oura API scopes:
-
-- `personal` - Personal information (age, weight, height)
-- `daily` - Daily summaries (sleep, activity, readiness, stress)
-- `heartrate` - Heart rate time-series data
-- `workout` - Workout summaries
-- `session` - Meditation and breathing sessions
-- `tag` - User tags and annotations
-- `spo2Daily` - SpO2 data (if using Gen 3 ring)
-
-## Development
-
-### Running Tests
+### Local Development
 
 ```bash
-# Install dev dependencies
-uv sync --dev
+git clone https://github.com/pokidyshev/oura-mcp.git
+cd oura-mcp
 
-# Run tests
-uv run pytest
+# Create .env file with your token
+cp .env.example .env
+# Edit .env and add: OURA_ACCESS_TOKEN=your_token
+
+# Install and test
+uv sync
+uv run mcp dev src/oura_mcp/server.py
 ```
 
-### Building
+### OAuth2 Support
 
-```bash
-uv build
-```
+⚠️ **OAuth2 with automatic token refresh is implemented but NOT TESTED YET.**
 
-### Publishing
+For production applications needing OAuth2, see `.env.example` for configuration options. Pull requests welcome to help test and document this feature!
 
-```bash
-uv publish
-```
+## Technical Details
 
-## Architecture
-
-```
-oura-mcp/
-├── src/oura_mcp/
-│   ├── __init__.py          # Package initialization
-│   ├── server.py            # MCP server with tools and resources
-│   ├── oura_client.py       # Oura API client with OAuth2
-│   └── config.py            # Configuration management
-├── pyproject.toml           # Project metadata and dependencies
-├── README.md                # This file
-└── .env.example             # Example environment variables
-```
-
-## Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+- **Rate Limits**: 5,000 requests per 5-minute window (handled automatically)
+- **Data Format**: All responses in JSON
+- **Date Formats**: Supports natural language ("today", "yesterday", "last week") and YYYY-MM-DD
+- **Security**: All API calls use HTTPS. Tokens stored in environment variables only.
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License - see LICENSE file
 
-## Support
+## Links
 
 - **Oura API Documentation**: https://cloud.ouraring.com/docs
-- **Oura API Support**: api-support@ouraring.com
 - **MCP Documentation**: https://modelcontextprotocol.io
-
-## Changelog
-
-### v0.1.0 (Initial Release)
-
-- Complete Oura API v2 integration
-- 15+ MCP tools for data fetching
-- 5 MCP resources for quick access
-- OAuth2 token management with auto-refresh
-- Natural language date parsing
-- Comprehensive error handling
-- Token persistence across restarts
-
-## Acknowledgments
-
-- Built with [FastMCP](https://github.com/jlowin/fastmcp)
-- Powered by [Oura API v2](https://cloud.ouraring.com/docs)
-- Model Context Protocol by [Anthropic](https://modelcontextprotocol.io)
+- **Built with**: [FastMCP](https://github.com/jlowin/fastmcp)

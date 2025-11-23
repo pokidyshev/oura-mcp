@@ -53,9 +53,12 @@ def format_response(data: any) -> str:
 # TOOLS - Interactive data fetching with parameters
 # ============================================================================
 
+
 # Core Daily Summaries
 @mcp.tool()
-def get_daily_sleep(start_date: str = "last week", end_date: Optional[str] = None) -> str:
+def get_daily_sleep(
+    start_date: str = "last week", end_date: Optional[str] = None
+) -> str:
     """
     Get daily sleep summaries including sleep score and contributors.
 
@@ -76,7 +79,9 @@ def get_daily_sleep(start_date: str = "last week", end_date: Optional[str] = Non
 
 
 @mcp.tool()
-def get_daily_activity(start_date: str = "last week", end_date: Optional[str] = None) -> str:
+def get_daily_activity(
+    start_date: str = "last week", end_date: Optional[str] = None
+) -> str:
     """
     Get daily activity summaries including activity score, steps, and calories.
 
@@ -97,7 +102,9 @@ def get_daily_activity(start_date: str = "last week", end_date: Optional[str] = 
 
 
 @mcp.tool()
-def get_daily_readiness(start_date: str = "last week", end_date: Optional[str] = None) -> str:
+def get_daily_readiness(
+    start_date: str = "last week", end_date: Optional[str] = None
+) -> str:
     """
     Get daily readiness summaries including readiness score and contributors.
 
@@ -118,7 +125,9 @@ def get_daily_readiness(start_date: str = "last week", end_date: Optional[str] =
 
 
 @mcp.tool()
-def get_daily_stress(start_date: str = "last week", end_date: Optional[str] = None) -> str:
+def get_daily_stress(
+    start_date: str = "last week", end_date: Optional[str] = None
+) -> str:
     """
     Get daily stress summaries including stress and recovery time.
 
@@ -140,7 +149,9 @@ def get_daily_stress(start_date: str = "last week", end_date: Optional[str] = No
 
 # Detailed Sleep Data
 @mcp.tool()
-def get_sleep_periods(start_date: str = "last week", end_date: Optional[str] = None) -> str:
+def get_sleep_periods(
+    start_date: str = "last week", end_date: Optional[str] = None
+) -> str:
     """
     Get detailed sleep periods with phases, heart rate, HRV, and breathing data.
 
@@ -161,7 +172,9 @@ def get_sleep_periods(start_date: str = "last week", end_date: Optional[str] = N
 
 
 @mcp.tool()
-def get_sleep_time(start_date: str = "last week", end_date: Optional[str] = None) -> str:
+def get_sleep_time(
+    start_date: str = "last week", end_date: Optional[str] = None
+) -> str:
     """
     Get optimal bedtime recommendations.
 
@@ -246,7 +259,9 @@ def get_heartrate(start_datetime: str, end_datetime: Optional[str] = None) -> st
 
 # Advanced Metrics
 @mcp.tool()
-def get_daily_spo2(start_date: str = "last week", end_date: Optional[str] = None) -> str:
+def get_daily_spo2(
+    start_date: str = "last week", end_date: Optional[str] = None
+) -> str:
     """
     Get daily SpO2 (blood oxygen) averages during sleep (Gen 3 ring only).
 
@@ -288,7 +303,9 @@ def get_vo2_max(start_date: str = "last week", end_date: Optional[str] = None) -
 
 
 @mcp.tool()
-def get_daily_resilience(start_date: str = "last week", end_date: Optional[str] = None) -> str:
+def get_daily_resilience(
+    start_date: str = "last week", end_date: Optional[str] = None
+) -> str:
     """
     Get daily resilience scores and levels.
 
@@ -309,7 +326,9 @@ def get_daily_resilience(start_date: str = "last week", end_date: Optional[str] 
 
 
 @mcp.tool()
-def get_cardiovascular_age(start_date: str = "last week", end_date: Optional[str] = None) -> str:
+def get_cardiovascular_age(
+    start_date: str = "last week", end_date: Optional[str] = None
+) -> str:
     """
     Get predicted cardiovascular age (vascular age prediction).
 
@@ -361,7 +380,9 @@ def get_ring_configuration() -> str:
 
 
 @mcp.tool()
-def get_enhanced_tags(start_date: str = "last week", end_date: Optional[str] = None) -> str:
+def get_enhanced_tags(
+    start_date: str = "last week", end_date: Optional[str] = None
+) -> str:
     """
     Get user-entered tags and annotations.
 
@@ -382,7 +403,9 @@ def get_enhanced_tags(start_date: str = "last week", end_date: Optional[str] = N
 
 
 @mcp.tool()
-def get_rest_mode_periods(start_date: str = "last week", end_date: Optional[str] = None) -> str:
+def get_rest_mode_periods(
+    start_date: str = "last week", end_date: Optional[str] = None
+) -> str:
     """
     Get rest mode periods (when user has enabled rest mode).
 
@@ -406,23 +429,24 @@ def get_rest_mode_periods(start_date: str = "last week", end_date: Optional[str]
 # RESOURCES - Quick access to recent summaries (no parameters)
 # ============================================================================
 
+
 @mcp.resource("oura://summary/today")
 def get_today_summary() -> str:
     """Today's readiness, sleep, and activity scores."""
     try:
         today = datetime.now().strftime("%Y-%m-%d")
-        
+
         readiness_data = oura_client.get_daily_readiness(today, today)
         sleep_data = oura_client.get_daily_sleep(today, today)
         activity_data = oura_client.get_daily_activity(today, today)
-        
+
         summary = {
             "date": today,
             "readiness": readiness_data[0] if readiness_data else None,
             "sleep": sleep_data[0] if sleep_data else None,
             "activity": activity_data[0] if activity_data else None,
         }
-        
+
         return format_response(summary)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -433,18 +457,18 @@ def get_yesterday_summary() -> str:
     """Yesterday's readiness, sleep, and activity scores."""
     try:
         yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-        
+
         readiness_data = oura_client.get_daily_readiness(yesterday, yesterday)
         sleep_data = oura_client.get_daily_sleep(yesterday, yesterday)
         activity_data = oura_client.get_daily_activity(yesterday, yesterday)
-        
+
         summary = {
             "date": yesterday,
             "readiness": readiness_data[0] if readiness_data else None,
             "sleep": sleep_data[0] if sleep_data else None,
             "activity": activity_data[0] if activity_data else None,
         }
-        
+
         return format_response(summary)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -456,12 +480,12 @@ def get_personal_info_resource() -> str:
     try:
         personal = oura_client.get_personal_info()
         ring = oura_client.get_ring_configuration()
-        
+
         info = {
             "personal_info": personal,
             "ring_configuration": ring[0] if ring else None,
         }
-        
+
         return format_response(info)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -473,7 +497,7 @@ def get_recent_sleep() -> str:
     try:
         start = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
         end = datetime.now().strftime("%Y-%m-%d")
-        
+
         data = oura_client.get_daily_sleep(start, end)
         return format_response(data)
     except OuraAPIError as e:
@@ -486,7 +510,7 @@ def get_recent_activity() -> str:
     try:
         start = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
         end = datetime.now().strftime("%Y-%m-%d")
-        
+
         data = oura_client.get_daily_activity(start, end)
         return format_response(data)
     except OuraAPIError as e:
@@ -497,24 +521,25 @@ def get_recent_activity() -> str:
 # MAIN ENTRY POINT
 # ============================================================================
 
+
 def main():
     """Main entry point for the MCP server."""
     # Validate configuration
     is_valid, error_msg = config.validate()
     if not is_valid:
         print(f"❌ Configuration error: {error_msg}")
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("QUICK START - Personal Access Token (Recommended)")
-        print("="*60)
+        print("=" * 60)
         print("1. Go to: https://cloud.ouraring.com/personal-access-tokens")
         print("2. Create a new Personal Access Token")
         print("3. Set environment variable: OURA_ACCESS_TOKEN=your_token_here")
         print("\nFor .env file setup:")
         print("  cp .env.example .env")
         print("  # Edit .env and add your OURA_ACCESS_TOKEN")
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("ADVANCED - OAuth2 with Automatic Token Refresh")
-        print("="*60)
+        print("=" * 60)
         print("For production apps, set all of these:")
         print("  - OURA_ACCESS_TOKEN")
         print("  - OURA_REFRESH_TOKEN")
@@ -534,4 +559,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

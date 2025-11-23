@@ -2,7 +2,6 @@
 
 import httpx
 from typing import Optional, Any
-from datetime import datetime, timedelta
 
 from .config import config
 
@@ -14,7 +13,11 @@ class OuraAPIError(Exception):
         self.status_code = status_code
         self.message = message
         self.detail = detail
-        super().__init__(f"[{status_code}] {message}: {detail}" if detail else f"[{status_code}] {message}")
+        super().__init__(
+            f"[{status_code}] {message}: {detail}"
+            if detail
+            else f"[{status_code}] {message}"
+        )
 
 
 class OuraClient:
@@ -29,13 +32,15 @@ class OuraClient:
 
     def __del__(self):
         """Cleanup HTTP client."""
-        if hasattr(self, '_client'):
+        if hasattr(self, "_client"):
             self._client.close()
 
     def _get_headers(self) -> dict[str, str]:
         """Get authorization headers for API requests."""
         if not self.config.access_token:
-            raise OuraAPIError(401, "No access token available", "Please configure OURA_ACCESS_TOKEN")
+            raise OuraAPIError(
+                401, "No access token available", "Please configure OURA_ACCESS_TOKEN"
+            )
         return {
             "Authorization": f"Bearer {self.config.access_token}",
         }
@@ -43,6 +48,8 @@ class OuraClient:
     def refresh_access_token(self) -> bool:
         """
         Refresh the access token using the refresh token.
+
+        ⚠️  WARNING: OAuth2 token refresh is NOT TESTED YET!
 
         Returns:
             True if refresh was successful, False otherwise
@@ -123,7 +130,9 @@ class OuraClient:
                 try:
                     error_data = response.json()
                     title = error_data.get("title", "API Error")
-                    detail = error_data.get("detail", error_data.get("error_description"))
+                    detail = error_data.get(
+                        "detail", error_data.get("error_description")
+                    )
                     raise OuraAPIError(response.status_code, title, detail)
                 except (ValueError, KeyError):
                     raise OuraAPIError(
@@ -173,7 +182,9 @@ class OuraClient:
         return self._request("GET", "/v2/usercollection/personal_info")
 
     # Daily Summaries
-    def get_daily_sleep(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_daily_sleep(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get daily sleep summaries.
 
@@ -186,7 +197,9 @@ class OuraClient:
             params["end_date"] = end_date
         return self._handle_pagination("/v2/usercollection/daily_sleep", params)
 
-    def get_daily_activity(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_daily_activity(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get daily activity summaries.
 
@@ -199,7 +212,9 @@ class OuraClient:
             params["end_date"] = end_date
         return self._handle_pagination("/v2/usercollection/daily_activity", params)
 
-    def get_daily_readiness(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_daily_readiness(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get daily readiness summaries.
 
@@ -212,7 +227,9 @@ class OuraClient:
             params["end_date"] = end_date
         return self._handle_pagination("/v2/usercollection/daily_readiness", params)
 
-    def get_daily_stress(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_daily_stress(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get daily stress summaries.
 
@@ -225,7 +242,9 @@ class OuraClient:
             params["end_date"] = end_date
         return self._handle_pagination("/v2/usercollection/daily_stress", params)
 
-    def get_daily_spo2(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_daily_spo2(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get daily SpO2 summaries (Gen 3 ring only).
 
@@ -238,7 +257,9 @@ class OuraClient:
             params["end_date"] = end_date
         return self._handle_pagination("/v2/usercollection/daily_spo2", params)
 
-    def get_daily_resilience(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_daily_resilience(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get daily resilience summaries.
 
@@ -264,10 +285,14 @@ class OuraClient:
         params = {"start_date": start_date}
         if end_date:
             params["end_date"] = end_date
-        return self._handle_pagination("/v2/usercollection/daily_cardiovascular_age", params)
+        return self._handle_pagination(
+            "/v2/usercollection/daily_cardiovascular_age", params
+        )
 
     # Detailed Sleep Data
-    def get_sleep_periods(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_sleep_periods(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get detailed sleep periods.
 
@@ -280,7 +305,9 @@ class OuraClient:
             params["end_date"] = end_date
         return self._handle_pagination("/v2/usercollection/sleep", params)
 
-    def get_sleep_time(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_sleep_time(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get optimal bedtime recommendations.
 
@@ -294,7 +321,9 @@ class OuraClient:
         return self._handle_pagination("/v2/usercollection/sleep_time", params)
 
     # Activity & Workouts
-    def get_workouts(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_workouts(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get workout summaries.
 
@@ -307,7 +336,9 @@ class OuraClient:
             params["end_date"] = end_date
         return self._handle_pagination("/v2/usercollection/workout", params)
 
-    def get_sessions(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_sessions(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get session data (meditation, breathing, etc.).
 
@@ -321,7 +352,9 @@ class OuraClient:
         return self._handle_pagination("/v2/usercollection/session", params)
 
     # Time-Series Data
-    def get_heartrate(self, start_datetime: str, end_datetime: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_heartrate(
+        self, start_datetime: str, end_datetime: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get heart rate time-series data (5-minute intervals).
 
@@ -335,7 +368,9 @@ class OuraClient:
         return self._handle_pagination("/v2/usercollection/heartrate", params)
 
     # User Annotations
-    def get_enhanced_tags(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_enhanced_tags(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get user-entered enhanced tags.
 
@@ -353,7 +388,9 @@ class OuraClient:
         """Get ring configuration and device information."""
         return self._handle_pagination("/v2/usercollection/ring_configuration")
 
-    def get_rest_mode_periods(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_rest_mode_periods(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get rest mode periods.
 
@@ -367,7 +404,9 @@ class OuraClient:
         return self._handle_pagination("/v2/usercollection/rest_mode_period", params)
 
     # Fitness Metrics
-    def get_vo2_max(self, start_date: str, end_date: Optional[str] = None) -> list[dict[str, Any]]:
+    def get_vo2_max(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         Get VO2 max estimates.
 
@@ -379,4 +418,3 @@ class OuraClient:
         if end_date:
             params["end_date"] = end_date
         return self._handle_pagination("/v2/usercollection/vO2_max", params)
-
