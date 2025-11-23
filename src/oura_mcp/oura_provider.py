@@ -105,7 +105,7 @@ class OuraProvider(OAuthProxy):
         Args:
             client_id: Your Oura OAuth application client ID
             client_secret: Your Oura OAuth application client secret
-            base_url: Your FastMCP server's public URL (e.g., https://your-app.fastmcp.app)
+            base_url: Your FastMCP server's public URL including mount path (e.g., https://your-app.fastmcp.app/mcp)
             **kwargs: Additional arguments passed to OAuthProxy
         """
         # Create Oura-specific token verifier
@@ -119,7 +119,7 @@ class OuraProvider(OAuthProxy):
             upstream_client_secret=client_secret,
             base_url=base_url,
             token_verifier=token_verifier,
-            redirect_path="/mcp/auth/callback",  # Full callback path for Oura redirect (FastMCP routes internally at /auth/callback)
+            redirect_path="/auth/callback",  # Callback path appended to base_url
             # Oura scopes to request from Oura
             extra_authorize_params={
                 "scope": "email personal daily heartrate workout session tag spo2Daily"
