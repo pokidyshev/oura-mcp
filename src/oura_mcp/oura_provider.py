@@ -119,7 +119,7 @@ class OuraProvider(OAuthProxy):
             upstream_client_secret=client_secret,
             base_url=base_url,
             token_verifier=token_verifier,
-            redirect_path="/auth/callback",  # FastMCP Cloud auto-mounts at /mcp, so this becomes /mcp/auth/callback
+            redirect_path="/mcp/auth/callback",  # Full callback path for Oura redirect (FastMCP routes internally at /auth/callback)
             # Oura scopes to request from Oura
             extra_authorize_params={
                 "scope": "email personal daily heartrate workout session tag spo2Daily"
