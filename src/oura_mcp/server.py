@@ -7,6 +7,7 @@ from typing import Optional
 
 from fastmcp import FastMCP
 from fastmcp.server.auth import OAuthProxy
+from fastmcp.server.auth.providers.debug import DebugTokenVerifier
 
 from oura_mcp.config import config
 from oura_mcp.oura_client import OuraClient, OuraAPIError
@@ -22,6 +23,10 @@ DEPLOYED_URL = os.getenv("DEPLOYED_URL", "https://oura-mcp.fastmcp.app")
 # This tells FastMCP how to communicate with Oura's OAuth endpoints
 auth = None
 if CLIENT_ID and CLIENT_SECRET:
+    # Token verifier for Oura's opaque tokens
+    # DebugTokenVerifier accepts any valid token (OAuthProxy handles actual validation)
+    token_verifier = DebugTokenVerifier()
+    
     auth = OAuthProxy(
         # Oura's specific OAuth endpoints
         upstream_authorization_endpoint="https://cloud.ouraring.com/oauth/authorize",
@@ -33,17 +38,12 @@ if CLIENT_ID and CLIENT_SECRET:
         base_url=DEPLOYED_URL,
         # The path Oura will redirect back to (MUST match your Oura Dev Portal setting)
         redirect_path="/mcp/auth/callback",
-        # Required scopes for Oura API access (as a list)
-        required_scopes=[
-            "email",
-            "personal",
-            "daily",
-            "heartrate",
-            "workout",
-            "session",
-            "tag",
-            "spo2Daily",
-        ],
+        # Token verifier for opaque tokens
+        token_verifier=token_verifier,
+        # Pass scopes to Oura's authorization endpoint
+        extra_authorize_params={
+            "scope": "email personal daily heartrate workout session tag spo2Daily"
+        },
     )
 
 # Initialize FastMCP server with OAuth (if configured) or without auth (for local PAT usage)

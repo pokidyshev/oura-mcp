@@ -695,9 +695,9 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fastmcp" },
-    { name = "httpx" },
-    { name = "python-dotenv" },
+    { name = "fastmcp", specifier = "~=2.13" },
+    { name = "httpx", specifier = "~=0.28" },
+    { name = "python-dotenv", specifier = "~=1.2" },
 ]
 
 [[package]]
