@@ -119,7 +119,7 @@ class OuraProvider(OAuthProxy):
             upstream_client_secret=client_secret,
             base_url=base_url,
             token_verifier=token_verifier,
-            redirect_path="/auth/callback",  # Path relative to base_url (which includes /mcp)
+            redirect_path="/mcp/auth/callback",  # Full path including FastMCP Cloud mount point
             # Oura scopes to request from Oura
             extra_authorize_params={
                 "scope": "email personal daily heartrate workout session tag spo2Daily"
