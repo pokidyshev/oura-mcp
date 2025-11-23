@@ -6,11 +6,10 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastmcp import FastMCP
-from fastmcp.server.auth import OAuthProxy
-from fastmcp.server.auth.providers.debug import DebugTokenVerifier
 
 from oura_mcp.config import config
 from oura_mcp.oura_client import OuraClient, OuraAPIError
+from oura_mcp.oura_provider import OuraProvider
 
 # OAuth2 Configuration for Oura
 # These should be set in your FastMCP Cloud environment
@@ -18,39 +17,24 @@ CLIENT_ID = os.getenv("OURA_CLIENT_ID")
 CLIENT_SECRET = os.getenv("OURA_CLIENT_SECRET")
 # The full URL where your server is deployed
 DEPLOYED_URL = os.getenv("DEPLOYED_URL", "https://oura-mcp.fastmcp.app")
-# JWT signing key for FastMCP tokens (production should use secure random key)
-JWT_SIGNING_KEY = os.getenv("JWT_SIGNING_KEY", "dev-key-change-in-production")
+# JWT signing key for FastMCP tokens (optional, for enhanced security)
+JWT_SIGNING_KEY = os.getenv("JWT_SIGNING_KEY")
 
-# Configure OAuth Proxy for Oura (only if credentials are provided)
-# This tells FastMCP how to communicate with Oura's OAuth endpoints
+# Configure Oura OAuth Provider (only if credentials are provided)
+# OuraProvider extends OAuthProxy with Oura-specific token validation
 auth = None
 if CLIENT_ID and CLIENT_SECRET:
-    # Token verifier for FastMCP-issued JWTs
-    # Note: OAuthProxy handles the actual OAuth security (code exchange, token storage)
-    # This verifier validates FastMCP's internal JWT tokens
-    # For enhanced security, configure jwt_signing_key in production
-    token_verifier = DebugTokenVerifier()
+    auth_kwargs = {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "base_url": DEPLOYED_URL,
+    }
     
-    auth = OAuthProxy(
-        # Oura's specific OAuth endpoints
-        upstream_authorization_endpoint="https://cloud.ouraring.com/oauth/authorize",
-        upstream_token_endpoint="https://api.ouraring.com/oauth/token",
-        # Your Oura App Credentials (from Oura Developer Portal)
-        upstream_client_id=CLIENT_ID,
-        upstream_client_secret=CLIENT_SECRET,
-        # The URL of your deployed server
-        base_url=DEPLOYED_URL,
-        # The path Oura will redirect back to (MUST match your Oura Dev Portal setting)
-        redirect_path="/mcp/auth/callback",
-        # JWT signing key for FastMCP-issued tokens
-        jwt_signing_key=JWT_SIGNING_KEY,
-        # Token verifier (required parameter)
-        token_verifier=token_verifier,
-        # Pass scopes to Oura's authorization endpoint
-        extra_authorize_params={
-            "scope": "email personal daily heartrate workout session tag spo2Daily"
-        },
-    )
+    # Add JWT signing key if provided (optional, for enhanced security)
+    if JWT_SIGNING_KEY:
+        auth_kwargs["jwt_signing_key"] = JWT_SIGNING_KEY
+    
+    auth = OuraProvider(**auth_kwargs)
 
 # Initialize FastMCP server with OAuth (if configured) or without auth (for local PAT usage)
 mcp = FastMCP(

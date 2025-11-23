@@ -171,7 +171,7 @@ For production deployment to FastMCP Cloud:
 
 ## Security Note (OAuth2 Deployment)
 
-The current OAuth2 implementation uses `DebugTokenVerifier` for FastMCP token validation. While OAuthProxy securely handles the OAuth flow, code exchange, and token storage, the FastMCP-issued JWT validation should be enhanced for production by implementing a custom token verifier or using introspection. The `JWT_SIGNING_KEY` environment variable provides some protection but a proper verifier is recommended for high-security deployments.
+The OAuth2 implementation uses `OuraProvider`, a custom provider that extends FastMCP's `OAuthProxy` with Oura-specific token validation. Token verification is performed by making API calls to Oura's endpoints, similar to how GitHub's provider works. This ensures that only valid Oura tokens are accepted, providing production-ready security for your deployment.
 
 ## License
 
