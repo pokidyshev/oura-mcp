@@ -33,8 +33,8 @@ if CLIENT_ID and CLIENT_SECRET:
         base_url=DEPLOYED_URL,
         # The path Oura will redirect back to (MUST match your Oura Dev Portal setting)
         redirect_path="/mcp/auth/callback",
-        # Scopes you need from Oura (space separated)
-        scopes="email personal daily heartrate workout session tag",
+        # Scopes passed to Oura's authorization endpoint
+        extra_authorize_params={"scope": "email personal daily heartrate workout session tag"},
     )
 
 # Initialize FastMCP server with OAuth (if configured) or without auth (for local PAT usage)
