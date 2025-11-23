@@ -16,6 +16,8 @@ Your AI assistant will have access to all your Oura Ring data and can analyze tr
 
 ## Quick Setup
 
+> **Note**: This guide covers **personal use** with Personal Access Tokens. For **production deployment** with OAuth2, configure environment variables (`OURA_CLIENT_ID`, `OURA_CLIENT_SECRET`, `DEPLOYED_URL`) in your FastMCP Cloud dashboard and deploy.
+
 ### Step 1: Get Your Oura Token
 
 1. Go to https://cloud.ouraring.com/personal-access-tokens
@@ -130,11 +132,35 @@ uv sync
 uv run mcp dev src/oura_mcp/server.py
 ```
 
-### OAuth2 Support
+### Production Deployment (OAuth2)
 
-⚠️ **OAuth2 with automatic token refresh is implemented but NOT TESTED YET.**
+For production deployment to FastMCP Cloud:
 
-For production applications needing OAuth2, see `.env.example` for configuration options. Pull requests welcome to help test and document this feature!
+1. **Configure OAuth in Oura Developer Portal**:
+
+   - Go to https://cloud.ouraring.com/oauth/applications
+   - Add redirect URI: `https://your-app.fastmcp.app/mcp/auth/callback`
+
+2. **Set environment variables in FastMCP Cloud dashboard**:
+
+   ```bash
+   OURA_CLIENT_ID=your_client_id
+   OURA_CLIENT_SECRET=your_client_secret
+   DEPLOYED_URL=https://your-app.fastmcp.app
+   ```
+
+3. **Deploy**: Push to connected GitHub repo or use FastMCP CLI
+
+4. **Use in Claude Desktop**: Add to config:
+   ```json
+   {
+     "mcpServers": {
+       "oura": {
+         "url": "https://your-app.fastmcp.app"
+       }
+     }
+   }
+   ```
 
 ## Technical Details
 

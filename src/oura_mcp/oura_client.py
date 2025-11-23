@@ -25,9 +25,15 @@ class OuraClient:
 
     BASE_URL = "https://api.ouraring.com"
 
-    def __init__(self):
-        """Initialize the Oura API client."""
+    def __init__(self, access_token: Optional[str] = None):
+        """
+        Initialize the Oura API client.
+
+        Args:
+            access_token: OAuth access token (optional, will use config if not provided)
+        """
         self.config = config
+        self._access_token = access_token
         self._client = httpx.Client(timeout=30.0)
 
     def __del__(self):
@@ -37,12 +43,16 @@ class OuraClient:
 
     def _get_headers(self) -> dict[str, str]:
         """Get authorization headers for API requests."""
-        if not self.config.access_token:
+        # Use provided token first, fall back to config
+        token = self._access_token or self.config.access_token
+        if not token:
             raise OuraAPIError(
-                401, "No access token available", "Please configure OURA_ACCESS_TOKEN"
+                401,
+                "No access token available",
+                "Please configure OURA_ACCESS_TOKEN or authenticate via OAuth",
             )
         return {
-            "Authorization": f"Bearer {self.config.access_token}",
+            "Authorization": f"Bearer {token}",
         }
 
     def refresh_access_token(self) -> bool:

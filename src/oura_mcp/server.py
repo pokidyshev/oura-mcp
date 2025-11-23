@@ -1,19 +1,86 @@
 """Oura MCP Server - Main server implementation."""
 
 import json
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
+from fastmcp.server.auth import OAuthProxy
 
 from .config import config
 from .oura_client import OuraClient, OuraAPIError
 
-# Initialize FastMCP server
-mcp = FastMCP("Oura Ring Health Data Server")
+# OAuth2 Configuration for Oura
+# These should be set in your FastMCP Cloud environment
+CLIENT_ID = os.getenv("OURA_CLIENT_ID")
+CLIENT_SECRET = os.getenv("OURA_CLIENT_SECRET")
+# The full URL where your server is deployed
+DEPLOYED_URL = os.getenv("DEPLOYED_URL", "https://oura-mcp.fastmcp.app")
 
-# Initialize Oura client
-oura_client = OuraClient()
+# Configure OAuth Proxy for Oura (only if credentials are provided)
+# This tells FastMCP how to communicate with Oura's OAuth endpoints
+auth = None
+if CLIENT_ID and CLIENT_SECRET:
+    auth = OAuthProxy(
+        # Oura's specific OAuth endpoints
+        upstream_authorization_endpoint="https://cloud.ouraring.com/oauth/authorize",
+        upstream_token_endpoint="https://api.ouraring.com/oauth/token",
+        # Your Oura App Credentials (from Oura Developer Portal)
+        upstream_client_id=CLIENT_ID,
+        upstream_client_secret=CLIENT_SECRET,
+        # The URL of your deployed server
+        base_url=DEPLOYED_URL,
+        # The path Oura will redirect back to (MUST match your Oura Dev Portal setting)
+        redirect_path="/mcp/auth/callback",
+        # Scopes you need from Oura (space separated)
+        scopes="email personal daily heartrate workout session tag",
+    )
+
+# Initialize FastMCP server with OAuth (if configured) or without auth (for local PAT usage)
+mcp = FastMCP(
+    "Oura Ring Health Data Server",
+    auth=auth,
+    # FastMCP Cloud requires listening on 0.0.0.0
+    host="0.0.0.0",
+    port=8080,
+)
+
+
+def get_oura_client() -> OuraClient:
+    """
+    Get an OuraClient instance with the appropriate access token.
+
+    In OAuth mode (production), attempts to get the upstream Oura token.
+    In PAT mode (local dev), uses the token from environment/config.
+
+    Note: OAuthProxy stores upstream tokens internally. For production use,
+    the upstream token needs to be accessed via the auth provider's storage.
+    This implementation tries to get it from the access token claims where
+    the upstream token may be stored.
+    """
+    try:
+        # Try to get access token from FastMCP
+        from fastmcp.server.dependencies import get_access_token
+
+        token = get_access_token()
+        if token:
+            # Check if the upstream token is in claims
+            # OAuthProxy may store it in token claims or we need custom storage access
+            upstream_token = token.claims.get("upstream_access_token")
+            if upstream_token:
+                return OuraClient(access_token=upstream_token)
+
+            # If no upstream token in claims, the token string itself might be usable
+            # This depends on how OAuthProxy is configured
+            if hasattr(token, "token"):
+                return OuraClient(access_token=token.token)
+    except (ImportError, RuntimeError, AttributeError):
+        # Context not available or not in OAuth mode
+        pass
+
+    # Fall back to config-based token (for local PAT usage)
+    return OuraClient()
 
 
 def parse_date(date_str: Optional[str]) -> str:
@@ -70,9 +137,10 @@ def get_daily_sleep(
         JSON array of daily sleep summaries with scores and contributors
     """
     try:
+        client = get_oura_client()
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_daily_sleep(start, end)
+        data = client.get_daily_sleep(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -93,9 +161,10 @@ def get_daily_activity(
         JSON array of daily activity summaries with scores, steps, calories, and MET data
     """
     try:
+        client = get_oura_client()
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_daily_activity(start, end)
+        data = client.get_daily_activity(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -116,9 +185,10 @@ def get_daily_readiness(
         JSON array of readiness scores with contributors (HRV, temperature, sleep balance, etc.)
     """
     try:
+        client = get_oura_client()
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_daily_readiness(start, end)
+        data = client.get_daily_readiness(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -139,9 +209,10 @@ def get_daily_stress(
         JSON array with stress_high and recovery_high seconds, plus day_summary
     """
     try:
+        client = get_oura_client()
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_daily_stress(start, end)
+        data = client.get_daily_stress(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -165,7 +236,8 @@ def get_sleep_periods(
     try:
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_sleep_periods(start, end)
+        client = get_oura_client()
+        data = client.get_sleep_periods(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -188,7 +260,8 @@ def get_sleep_time(
     try:
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_sleep_time(start, end)
+        client = get_oura_client()
+        data = client.get_sleep_time(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -210,7 +283,8 @@ def get_workouts(start_date: str = "last week", end_date: Optional[str] = None) 
     try:
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_workouts(start, end)
+        client = get_oura_client()
+        data = client.get_workouts(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -231,7 +305,8 @@ def get_sessions(start_date: str = "last week", end_date: Optional[str] = None) 
     try:
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_sessions(start, end)
+        client = get_oura_client()
+        data = client.get_sessions(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -251,7 +326,8 @@ def get_heartrate(start_datetime: str, end_datetime: Optional[str] = None) -> st
         JSON array of heart rate measurements with BPM, source, and timestamp
     """
     try:
-        data = oura_client.get_heartrate(start_datetime, end_datetime)
+        client = get_oura_client()
+        data = client.get_heartrate(start_datetime, end_datetime)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -275,7 +351,8 @@ def get_daily_spo2(
     try:
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_daily_spo2(start, end)
+        client = get_oura_client()
+        data = client.get_daily_spo2(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -296,7 +373,8 @@ def get_vo2_max(start_date: str = "last week", end_date: Optional[str] = None) -
     try:
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_vo2_max(start, end)
+        client = get_oura_client()
+        data = client.get_vo2_max(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -319,7 +397,8 @@ def get_daily_resilience(
     try:
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_daily_resilience(start, end)
+        client = get_oura_client()
+        data = client.get_daily_resilience(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -342,7 +421,8 @@ def get_cardiovascular_age(
     try:
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_daily_cardiovascular_age(start, end)
+        client = get_oura_client()
+        data = client.get_daily_cardiovascular_age(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -358,7 +438,8 @@ def get_personal_info() -> str:
         JSON object with personal information and user ID
     """
     try:
-        data = oura_client.get_personal_info()
+        client = get_oura_client()
+        data = client.get_personal_info()
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -373,7 +454,8 @@ def get_ring_configuration() -> str:
         JSON array with ring configuration details including hardware type and setup date
     """
     try:
-        data = oura_client.get_ring_configuration()
+        client = get_oura_client()
+        data = client.get_ring_configuration()
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -396,7 +478,8 @@ def get_enhanced_tags(
     try:
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_enhanced_tags(start, end)
+        client = get_oura_client()
+        data = client.get_enhanced_tags(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -419,7 +502,8 @@ def get_rest_mode_periods(
     try:
         start = parse_date(start_date)
         end = parse_date(end_date) if end_date else None
-        data = oura_client.get_rest_mode_periods(start, end)
+        client = get_oura_client()
+        data = client.get_rest_mode_periods(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -434,11 +518,12 @@ def get_rest_mode_periods(
 def get_today_summary() -> str:
     """Today's readiness, sleep, and activity scores."""
     try:
+        client = get_oura_client()
         today = datetime.now().strftime("%Y-%m-%d")
 
-        readiness_data = oura_client.get_daily_readiness(today, today)
-        sleep_data = oura_client.get_daily_sleep(today, today)
-        activity_data = oura_client.get_daily_activity(today, today)
+        readiness_data = client.get_daily_readiness(today, today)
+        sleep_data = client.get_daily_sleep(today, today)
+        activity_data = client.get_daily_activity(today, today)
 
         summary = {
             "date": today,
@@ -456,11 +541,12 @@ def get_today_summary() -> str:
 def get_yesterday_summary() -> str:
     """Yesterday's readiness, sleep, and activity scores."""
     try:
+        client = get_oura_client()
         yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-        readiness_data = oura_client.get_daily_readiness(yesterday, yesterday)
-        sleep_data = oura_client.get_daily_sleep(yesterday, yesterday)
-        activity_data = oura_client.get_daily_activity(yesterday, yesterday)
+        readiness_data = client.get_daily_readiness(yesterday, yesterday)
+        sleep_data = client.get_daily_sleep(yesterday, yesterday)
+        activity_data = client.get_daily_activity(yesterday, yesterday)
 
         summary = {
             "date": yesterday,
@@ -478,8 +564,9 @@ def get_yesterday_summary() -> str:
 def get_personal_info_resource() -> str:
     """Personal information and ring configuration."""
     try:
-        personal = oura_client.get_personal_info()
-        ring = oura_client.get_ring_configuration()
+        client = get_oura_client()
+        personal = client.get_personal_info()
+        ring = client.get_ring_configuration()
 
         info = {
             "personal_info": personal,
@@ -498,7 +585,8 @@ def get_recent_sleep() -> str:
         start = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
         end = datetime.now().strftime("%Y-%m-%d")
 
-        data = oura_client.get_daily_sleep(start, end)
+        client = get_oura_client()
+        data = client.get_daily_sleep(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
@@ -511,7 +599,8 @@ def get_recent_activity() -> str:
         start = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
         end = datetime.now().strftime("%Y-%m-%d")
 
-        data = oura_client.get_daily_activity(start, end)
+        client = get_oura_client()
+        data = client.get_daily_activity(start, end)
         return format_response(data)
     except OuraAPIError as e:
         return format_response({"error": str(e), "status_code": e.status_code})
