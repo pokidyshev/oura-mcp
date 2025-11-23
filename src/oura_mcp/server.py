@@ -17,13 +17,26 @@ CLIENT_ID = os.getenv("OURA_CLIENT_ID")
 CLIENT_SECRET = os.getenv("OURA_CLIENT_SECRET")
 # The full URL where your server is deployed
 DEPLOYED_URL = os.getenv("DEPLOYED_URL", "https://oura-mcp.fastmcp.app")
+# JWT signing key for FastMCP's own tokens (REQUIRED for production)
+# This must be stable across deployments or all client tokens become invalid
+# Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+JWT_SIGNING_KEY = os.getenv("JWT_SIGNING_KEY")
 
 # Configure Oura OAuth Provider (only if credentials are provided)
 # OuraProvider extends OAuthProxy with Oura-specific token validation
 auth = None
 if CLIENT_ID and CLIENT_SECRET:
+    if not JWT_SIGNING_KEY:
+        raise ValueError(
+            "JWT_SIGNING_KEY environment variable is required for OAuth2 deployment. "
+            'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
+        )
+    
     auth = OuraProvider(
-        client_id=CLIENT_ID, client_secret=CLIENT_SECRET, base_url=DEPLOYED_URL
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
+        base_url=DEPLOYED_URL,
+        jwt_signing_key=JWT_SIGNING_KEY,
     )
 
 # Initialize FastMCP server with OAuth (if configured) or without auth (for local PAT usage)

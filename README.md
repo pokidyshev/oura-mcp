@@ -141,17 +141,28 @@ For production deployment to FastMCP Cloud:
    - Go to https://cloud.ouraring.com/oauth/applications
    - Add redirect URI: `https://your-app.fastmcp.app/mcp/auth/callback`
 
-2. **Set environment variables in FastMCP Cloud dashboard**:
+2. **Generate a JWT signing key**:
+
+   ```bash
+   python -c "import secrets; print(secrets.token_urlsafe(32))"
+   ```
+
+   Copy the output - you'll need it in the next step.
+
+3. **Set environment variables in FastMCP Cloud dashboard**:
 
    ```bash
    OURA_CLIENT_ID=your_client_id
    OURA_CLIENT_SECRET=your_client_secret
    DEPLOYED_URL=https://your-app.fastmcp.app
+   JWT_SIGNING_KEY=<paste_generated_key_here>
    ```
 
-3. **Deploy**: Push to connected GitHub repo or use FastMCP CLI
+   ⚠️ **Important**: Keep `JWT_SIGNING_KEY` stable! If you change it, all user tokens become invalid.
 
-4. **Use in Claude Desktop**: Add to config:
+4. **Deploy**: Push to connected GitHub repo or use FastMCP CLI
+
+5. **Use in Claude Desktop**: Add to config:
    ```json
    {
      "mcpServers": {
