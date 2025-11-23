@@ -42,6 +42,7 @@ if CLIENT_ID and CLIENT_SECRET:
             "workout",
             "session",
             "tag",
+            "spo2Daily",
         ],
     )
 
