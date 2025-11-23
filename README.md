@@ -169,6 +169,10 @@ For production deployment to FastMCP Cloud:
 - **Date Formats**: Supports natural language ("today", "yesterday", "last week") and YYYY-MM-DD
 - **Security**: All API calls use HTTPS. Tokens stored in environment variables only.
 
+## Security Note (OAuth2 Deployment)
+
+The current OAuth2 implementation uses `DebugTokenVerifier` for FastMCP token validation. While OAuthProxy securely handles the OAuth flow, code exchange, and token storage, the FastMCP-issued JWT validation should be enhanced for production by implementing a custom token verifier or using introspection. The `JWT_SIGNING_KEY` environment variable provides some protection but a proper verifier is recommended for high-security deployments.
+
 ## License
 
 MIT License - see LICENSE file

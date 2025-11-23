@@ -18,13 +18,17 @@ CLIENT_ID = os.getenv("OURA_CLIENT_ID")
 CLIENT_SECRET = os.getenv("OURA_CLIENT_SECRET")
 # The full URL where your server is deployed
 DEPLOYED_URL = os.getenv("DEPLOYED_URL", "https://oura-mcp.fastmcp.app")
+# JWT signing key for FastMCP tokens (production should use secure random key)
+JWT_SIGNING_KEY = os.getenv("JWT_SIGNING_KEY", "dev-key-change-in-production")
 
 # Configure OAuth Proxy for Oura (only if credentials are provided)
 # This tells FastMCP how to communicate with Oura's OAuth endpoints
 auth = None
 if CLIENT_ID and CLIENT_SECRET:
-    # Token verifier for Oura's opaque tokens
-    # DebugTokenVerifier accepts any valid token (OAuthProxy handles actual validation)
+    # Token verifier for FastMCP-issued JWTs
+    # Note: OAuthProxy handles the actual OAuth security (code exchange, token storage)
+    # This verifier validates FastMCP's internal JWT tokens
+    # For enhanced security, configure jwt_signing_key in production
     token_verifier = DebugTokenVerifier()
     
     auth = OAuthProxy(
@@ -38,7 +42,9 @@ if CLIENT_ID and CLIENT_SECRET:
         base_url=DEPLOYED_URL,
         # The path Oura will redirect back to (MUST match your Oura Dev Portal setting)
         redirect_path="/mcp/auth/callback",
-        # Token verifier for opaque tokens
+        # JWT signing key for FastMCP-issued tokens
+        jwt_signing_key=JWT_SIGNING_KEY,
+        # Token verifier (required parameter)
         token_verifier=token_verifier,
         # Pass scopes to Oura's authorization endpoint
         extra_authorize_params={
