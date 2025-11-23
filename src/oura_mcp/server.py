@@ -8,8 +8,8 @@ from typing import Optional
 from fastmcp import FastMCP
 from fastmcp.server.auth import OAuthProxy
 
-from .config import config
-from .oura_client import OuraClient, OuraAPIError
+from oura_mcp.config import config
+from oura_mcp.oura_client import OuraClient, OuraAPIError
 
 # OAuth2 Configuration for Oura
 # These should be set in your FastMCP Cloud environment
